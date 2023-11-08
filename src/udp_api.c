@@ -16,27 +16,27 @@ static void udp_rx_callback(
   // Handle incoming message
   printf("Received message from ");
   // Parsing the address and data..
-  //uip_debug_ipaddr_print(sender_addr);
+  uiplib_ipaddr_print(sender_addr);
   printf(" on port %d from port %d with length %d: '%s'\n",
          receiver_port, sender_port, datalen, data);
-
   // send some form of ack.. 
 }
 
 void udp_init(int me, int dest)
 {
-  uip_ip6addr(&my_adr, 0xfd00, 0, 0, 0, 0, 0, 0, me); // Convert My IP
-  uip_ip6addr(&dest_ipaddr, 0xfd00, 0, 0, 0, 0, 0, 0, dest); // Convert Destination IP
-  simple_udp_register(&udp_conn, LOCAL_PORT, &dest_ipaddr, LOCAL_PORT, udp_rx_callback);
-  
-  const uip_ipaddr_t *default_prefix = uip_ds6_default_prefix();
+  uip_ip6addr(&my_adr, 0xfd00, 2, 2, 2, 2, 2, 2, me); // Convert My IP
+  uip_ip6addr(&dest_ipaddr, 0xfd00, 2, 2, 2, 2, 2, 2, dest); // Convert Destination IP
+  printf("My adress is: ");
+  uiplib_ipaddr_print(&my_adr);
+  printf("\n");
   uip_ds6_addr_add(&my_adr, 0, ADDR_AUTOCONF);
+  simple_udp_register(&udp_conn, LOCAL_PORT, &dest_ipaddr, LOCAL_PORT, udp_rx_callback);
 }
 
 void udp_msg_send(char *buf, int buflen)
 {
     simple_udp_sendto(&udp_conn, buf, sizeof(buf), &dest_ipaddr);
     printf("Sent a message to ");
-    //uip_debug_ipaddr_print(&dest_ipaddr);
+    uiplib_ipaddr_print(&dest_ipaddr);
     printf("\n");
 }

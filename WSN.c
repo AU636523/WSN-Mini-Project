@@ -14,12 +14,10 @@ static struct etimer send_timer;
 PROCESS_THREAD(main_process, ev, data)
 {
   PROCESS_BEGIN();
-  udp_init(1,2);
+  udp_init(2,1);
   //For testing
-  snprintf(outbuf, sizeof(outbuf), "Hello, multicast message!");
+  snprintf(outbuf, sizeof(outbuf), "Hello from S!");
   etimer_set(&send_timer, CLOCK_SECOND);
-
-  
 
   while(1) {
     udp_msg_send(outbuf, sizeof(outbuf));

@@ -1,6 +1,6 @@
 #include "src/temp_sensor.h"
 #include "src/debug.h"
-#include "src/udp_api.h"
+#include "src/udp.h"
 
 /*---------------------------------------------------------------------------*/
 PROCESS(main_process, "main_process");
@@ -14,12 +14,10 @@ static struct etimer send_timer;
 PROCESS_THREAD(main_process, ev, data)
 {
   PROCESS_BEGIN();
-  udp_init(1,2);
+  udp_init();
   //For testing
   snprintf(outbuf, sizeof(outbuf), "Hello, multicast message!");
   etimer_set(&send_timer, CLOCK_SECOND);
-
-  
 
   while(1) {
     udp_msg_send(outbuf, sizeof(outbuf));

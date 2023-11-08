@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "cc.h": "c",
+        "packetbuf.h": "c",
+        "sht11-sensor.h": "c",
+        "project-conf.h": "c",
+        "sstream": "c",
+        "regex": "c",
+        "simple-udp.h": "c",
+        "uip.h": "c",
+        "udp_api.h": "c"
+    },
+    "cmake.configureOnOpen": true
+    
+}

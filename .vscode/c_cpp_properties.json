@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/simon-fogh-thomsen/contiki-ng/os/**",
+                "/home/simon-fogh-thomsen/contiki-ng/arch/platform/sky/**",
+                "/home/simon-fogh-thomsen/contiki-ng/arch/cpu/msp430/**",
+                "/home/simon-fogh-thomsen/contiki-ng/arch/dev/radio/cc2420",
+                "/usr/local/msp430/include",
+                "/home/simon-fogh-thomsen/contiki-ng/arch",
+                "/home/simon-fogh-thomsen/contiki-ng/os"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

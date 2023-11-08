@@ -1,0 +1,88 @@
+{
+    "version": "2.0.0",
+    
+    "tasks": [
+		{
+			"label": "Local Build",
+			"command": "make",
+			"args": [
+				"TARGET=native",
+				"${fileBasenameNoExtension}.native"
+			],
+			"isBuildCommand": true,
+			"problemMatcher": [
+				"$armcc5"
+			]
+		},
+		{
+			"label": "Show Motelist",
+			"command": "make",
+			"args": [
+				"TARGET=sky",
+				"motelist"
+			],
+			"isBuildCommand": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Clean Local",
+			"command": "make",
+			"args": [
+				"TARGET=native",
+				"clean"
+			],
+			"isBuildCommand": false
+		},
+		{
+			"label": "SKY Build and Upload",
+			"command": "make",
+			"args": [
+				"TARGET=sky",
+				"MOTES=/dev/ttyUSB0",
+				"${fileBasenameNoExtension}.upload"
+			],
+			"isBuildCommand": true,
+			"problemMatcher": [
+				"$armcc5"
+			]
+		},
+		{
+			"label": "SKY Build, Upload, Login",
+			"command": "make",
+			"args": [
+				"TARGET=sky",
+				"MOTES=/dev/ttyUSB0",
+				"login"
+			],
+			"isBuildCommand": true,
+			"problemMatcher": [
+				"$armcc5"
+			],
+			"dependsOn": [
+				"SKY Build and Upload"
+			],
+		},
+		{
+			"label": "SKY Login",
+			"command": "make",
+			"args": [
+				"TARGET=sky",
+				"MOTES=/dev/ttyUSB0",
+				"login"
+			],
+			"isBuildCommand": true,
+			"problemMatcher": [
+				"$armcc5"
+			]
+		},
+		{
+			"label": "SKY Clean",
+			"command": "make",
+			"args": [
+				"TARGET=sky",
+				"clean"
+			],
+			"isBuildCommand": false
+		}
+	]
+}

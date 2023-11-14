@@ -8,7 +8,15 @@
         "regex": "c",
         "simple-udp.h": "c",
         "uip.h": "c",
-        "udp_api.h": "c"
+        "udp_api.h": "c",
+        "log-conf.h": "c",
+        "cstdint": "cpp",
+        "udp.h": "c",
+        "netfwd": "c",
+        "netdriver.h": "c",
+        "routing.h": "c",
+        "rpl-dag.h": "c",
+        "rpl-conf.h": "c"
     },
     "cmake.configureOnOpen": true
     

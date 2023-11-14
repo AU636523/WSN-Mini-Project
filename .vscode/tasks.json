@@ -1,13 +1,13 @@
 {
     "version": "2.0.0",
-    
+
     "tasks": [
 		{
 			"label": "Local Build",
 			"command": "make",
 			"args": [
 				"TARGET=native",
-				"${fileBasenameNoExtension}.native"
+				"WSN.native"
 			],
 			"isBuildCommand": true,
 			"problemMatcher": [
@@ -39,7 +39,7 @@
 			"args": [
 				"TARGET=sky",
 				"MOTES=/dev/ttyUSB0",
-				"${fileBasenameNoExtension}.upload"
+				"WSN.upload"
 			],
 			"isBuildCommand": true,
 			"problemMatcher": [

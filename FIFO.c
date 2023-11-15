@@ -4,8 +4,13 @@ void FIFO_init(struct measurementContainer *f)
 {
     f->put = FIFO_put;
     f->getBatch = FIFO_getBatch;
+    f->noBuffersFull = FIFO_noBuffersFull;
     f->_batchPtr = 0;
     return;
+}
+
+int FIFO_noBuffersFull(struct measurementContainer *f) {
+    return 0;
 }
 
 int FIFO_put(struct measurementContainer *f, munit in) {
@@ -16,7 +21,7 @@ int FIFO_put(struct measurementContainer *f, munit in) {
     int buffer = f->_batchPtr / SEND_BUFFER_SIZE;
     int index = f->_batchPtr % SEND_BUFFER_SIZE;
     f->batch[buffer][index] = in;
-    f->_batchPtr--;
+    f->_batchPtr++;
     return true; 
 }
 

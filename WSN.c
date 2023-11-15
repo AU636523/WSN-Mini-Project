@@ -41,7 +41,7 @@ PROCESS_THREAD(main_process, ev, data)
 
   /*** Main Loop ***/
   while(1) {
-    
+
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&send_timer));
     etimer_reset(&send_timer);
   }
@@ -59,12 +59,15 @@ PROCESS_THREAD(measurement_process, ev, data)
   while(1) {
     /* Get Measurement */
     munit u = sensor.getMeasurement(&sensor);
+    LOG_INFO("Sensor Get Meas done\n");
 
     /* Save Measurement to container */
     mcontainer.put(&mcontainer, u);
+    LOG_INFO("Put done\n");
 
     /* Poll Communicatin Process */
     process_post(&communication_process, PROCESS_EVENT_CONTINUE, NULL);
+    LOG_INFO("Process post done\n");
 
     /* Wait till timer expired */
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&measurement_timer));

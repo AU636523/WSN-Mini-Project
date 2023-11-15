@@ -11,7 +11,7 @@
 			],
 			"isBuildCommand": true,
 			"problemMatcher": [
-				"$armcc5"
+				"$gcc"
 			]
 		},
 		{

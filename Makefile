@@ -6,11 +6,11 @@ CONTIKI = ../..
 TARGET_LIBFILES = -lm
 
 #Add src dir
-REST_RESOURCES_DIR = ./src/NetDriver
+REST_RESOURCES_DIR = ./src
 PROJECTDIRS += $(REST_RESOURCES_DIR) 
 
-#Add files in src dir
-REST_RESOURCES_FILES = $(notdir $(shell find $(REST_RESOURCES_DIR) -name '*.c'))
+#Add files in src di
+REST_RESOURCES_FILES = $(shell find ./src/* *.c)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
 MAKE_ROUTING = MAKE_ROUTING_RPL_CLASSIC

@@ -24,16 +24,23 @@ bool UDP_Driver_init(UDP_Driver_t* me, uint8_t myID)
     me->drv.ID = myID;
     me->drv.parentID = (myID > 1 ? (myID - 1) : 0);
     me->drv.rootID = 1;
+    me->drv.sendMsg = UDP_Driver_sendMsg;
 
     /* Set my IP */
+    LOG_INFO("Setting IP to");
+    LOG_INFO_6ADDR(&me->prefixedIPBuffer);
+    LOG_INFO("\n");
     uip_ipaddr(&me->prefixedIPBuffer, IPV6_PREFIX_0, IPV6_PREFIX_1, IPV6_PREFIX_2, myID);
     uip_ds6_set_addr_iid(&me->prefixedIPBuffer, &uip_lladdr);
+    LOG_INFO("Adding address\n");
     uip_ds6_addr_add(&me->prefixedIPBuffer, 0, ADDR_AUTOCONF);
 
     /* Start DAG if I am root */
+    if (myID == UDP_ROOT_ID) LOG_INFO("Starting me as root\n");
     if (myID == UDP_ROOT_ID) NETSTACK_ROUTING.root_start();
 
     /* Register Contiki UDP Driver */
+    LOG_INFO("Registering UDP Driver\n");
     return simple_udp_register(&me->c, UDP_PORT, NULL, UDP_PORT, udp_rx_callback);
 }
 static bool isIDReachable(UDP_Driver_t* me, uint8_t id)

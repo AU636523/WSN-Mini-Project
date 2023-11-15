@@ -1,0 +1,66 @@
+@startuml
+class MainApp
+
+abstract Sensor {
+    + m_int getMeasurement()
+    - measurermentContrainer _c
+}
+class nullSensor{
+    + m_int getMeasurement()
+    - measurementContainer _c
+}
+Sensor <|-- nullSensor
+MainApp *-- Sensor
+
+abstract measurermentContainer{
+    + bool put()
+    + bool take()
+}
+class FIFO {
+    + bool put()
+    + bool take()
+    - m_int buffer[BUFFER_SIZE]
+    - uint8_t _inPtr
+    - uint8_t _outPtr
+    - uint8_t _len
+}
+measurermentContainer <|-- FIFO
+MainApp *-- measurermentContainer
+
+abstract DataAggregator {
+    + do(m_int* buf, m_int* in)
+}
+class nullAggregator{
+    + do(m_int* buf, m_int* in)
+}
+DataAggregator <|-- nullAggregator
+MainApp *-- DataAggregator
+
+abstract Communication{
+    + init(void* recv_cb)
+    + bool send(byte msg, uint8_t len)
+}
+class nullCommunication{
+    + init(void* recv_cb)
+    + bool send(byte msg, uint8_t len)
+}
+Communication <|-- nullCommunication
+MainApp *-- Communication
+
+abstract EnergyMeasurer{
+    + start()
+    + stop()
+    + reset()
+}
+class nullMeasurer{
+    + start()
+    + stop()
+    + reset()
+}
+
+EnergyMeasurer <|-- nullMeasurer
+MainApp *-- EnergyMeasurer
+
+
+
+@enduml

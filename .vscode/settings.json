@@ -16,7 +16,17 @@
         "netdriver.h": "c",
         "routing.h": "c",
         "rpl-dag.h": "c",
-        "rpl-conf.h": "c"
+        "rpl-conf.h": "c",
+        "communication.h": "c",
+        "dataaggregator.h": "c",
+        "nullmeasurer.h": "c",
+        "nullsensor.h": "c",
+        "sensor.h": "c",
+        "nullcommunication.h": "c",
+        "nullaggregator.h": "c",
+        "fifo.h": "c",
+        "measurementcontainer.h": "c",
+        "energymeasurer.h": "c"
     },
     "cmake.configureOnOpen": true
     

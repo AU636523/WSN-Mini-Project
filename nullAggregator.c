@@ -53,3 +53,23 @@ uint8_t nullAggregator_do_agg(struct DataAggregator *a, munit* in, byte *out) {
     return transmitted_bytes;
 }*/
 
+// delta variance using 4 bit representation of the delta values 
+/*uint8_t nullAggregator_do_agg(struct DataAggregator *a, munit* in, byte *out) {
+    int outIndex = 1; // Index for the output array
+    out[0] = (byte)(in[0] & 0xFF);
+
+    // Iterate over the input array in steps of 2 to pack two deltas into one byte
+    for (int i = 0; i < SEND_BUFFER_SIZE - 1; i += 2) {
+        byte delta1 = (byte)(in[i + 1] - in[i]) & 0x0F; // First 4-bit delta
+
+        byte delta2 = 0;
+        if (i + 2 < SEND_BUFFER_SIZE) {
+            delta2 = (byte)(in[i + 2] - in[i + 1]) & 0x0F; // Second 4-bit delta
+        }
+
+        out[outIndex] = (delta1 << 4) | delta2; // Pack two 4-bit deltas into one byte
+        outIndex++;
+    }
+
+    return outIndex; // Number of bytes in the output array
+}*/

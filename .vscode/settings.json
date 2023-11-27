@@ -26,7 +26,27 @@
         "nullaggregator.h": "c",
         "fifo.h": "c",
         "measurementcontainer.h": "c",
-        "energymeasurer.h": "c"
+        "energymeasurer.h": "c",
+        "rpl-neighbor.h": "c",
+        "simplecommunication.h": "c",
+        "randsensor.h": "c",
+        "uip-ds6-nbr.h": "c",
+        "random.h": "c",
+        "circularcontainer.h": "c",
+        "node-id.h": "c",
+        "uip-ds6.h": "c",
+        "array": "c",
+        "*.tcc": "c",
+        "memory": "c",
+        "format": "c",
+        "future": "c",
+        "istream": "c",
+        "functional": "c",
+        "tuple": "c",
+        "utility": "c",
+        "variant": "c",
+        "deltaconcatformat.h": "c",
+        "msgformat.h": "c"
     },
     "cmake.configureOnOpen": true
     

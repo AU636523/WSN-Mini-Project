@@ -34,6 +34,18 @@
 			"isBuildCommand": false
 		},
 		{
+			"label": "SKY Build",
+			"command": "make",
+			"args": [
+				"TARGET=sky",
+				"WSN.sky"
+			],
+			"isBuildCommand": true,
+			"problemMatcher": [
+				"$armcc5"
+			]
+		},
+		{
 			"label": "SKY Build and Upload",
 			"command": "make",
 			"args": [

@@ -1,15 +1,25 @@
-/* Project Configurations */
-#define RPL_CONF_WITH_STORING           0
-#define RPL_CONF_WITH_NON_STORING       0
-#define RPL_CONF_MOP RPL_MOP_STORING_MULTICAST
+#include <stdbool.h>
+#include <stdint.h>
+
+#define DEBUG_LEVEL_RPL DEBUG_LEVEL_DBG
 
 /* Networking Defines */
 #define UDP_PORT 123
+#define RPL_ROOT_ID 1
+
+#ifndef NETWORKING_ID
+    #define NETWORKING_ID 1
+#endif // !NETWORKING_ID
+
+#define MAX_NODES 8
+#define PATIENCE (MAX_NODES - 1)
+
+/* Message Defines */
+#define MESSAGE_HEADER_SIZE 1
 
 /* Measurement Defines */
 #define SEND_BUFFER_SIZE 16
-#define TOTAL_BUFFERS 2
 
-#define MEASUREMENT_EVERY_N_SEC 1
+typedef uint16_t munit; //Measurement Unit
 
-#define COMMUNICATION_BUFFER_BYTE_SIZE 64
+#define CHECK_ALL_BITS_ARE_SAT_FROM_MASK(mask, value) ((mask & value) == mask)

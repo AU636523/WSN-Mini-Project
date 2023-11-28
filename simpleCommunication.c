@@ -10,7 +10,6 @@ static struct process* _comProcess;
 
 static struct Communication* _c; //Local reference to communication singleton struct
 
-
 static void
 udp_rx_callback(struct simple_udp_connection *c,
          const uip_ipaddr_t *sender_addr,
@@ -55,16 +54,36 @@ void simpleCommunication_init(Communication *c, struct process* comProcess)
 {
     /* Save variables */
     _comProcess = comProcess;
-    c->send = &simpleCommunication_send;
-    c->buf = (byte*)&uip_appdata;
-    c->getPatienceInMs = &simpleCommunication_getPatienceInMs;
+    c->send = simpleCommunication_send;
+    c->outgoing_buffer = (byte*)&uip_appdata;
+    c->amIReachable = simpleCommunication_amIReachable;
+    c->getNextRouteParticipant = simpleCommunication_getNextRouteParticipant;
     _c = c;
 
     /* Register UDP Connection */
-    simple_udp_register(&udp, UDP_PORT, NULL, UDP_PORT, udp_rx_callback);
+    LOG_INFO("Registering UDP Connection\n");
+    simple_udp_register(&udp, UDP_SEND_PORT, NULL, UDP_RECV_PORT, udp_rx_callback);
 
     /* Set IP according to node id */
-    setIp(c,NETWORKING_ID);
+    setIp(c,node_id);
+
+    /* Start DAG if I am root */
+    if (node_id == RPL_ROOT_ID) { LOG_INFO("Starting DAG\n"); NETSTACK_ROUTING.root_start(); }
+
+    /* Init RPL Neigbor Module for route and neighbor manipulation */
+    rpl_neighbor_init();
+}
+
+bool simpleCommunication_getNextRouteParticipant(struct Communication* c, byte currentParticipantMask, uip_ipaddr_t* out)
+{
+    /* With this simple mechanism, the nodes HAVE to be arranged in order */
+    uint8_t i = node_id - 1;
+    while(IS_BIT_SAT(currentParticipantMask, i)){ i--; }
+
+    LOG_INFO("Next route participant is %d\n", i);
+
+    setStdIpAddrFormat(i, out);
+    return true;
 }
 
 int simpleCommunication_send(struct Communication *c, uip_ipaddr_t* ip, byte* msg, int len)
@@ -74,44 +93,70 @@ int simpleCommunication_send(struct Communication *c, uip_ipaddr_t* ip, byte* ms
 
     /* Send message */
     uint16_t s = simple_udp_sendto(&udp, msg, len, ip);
+    LOG_INFO("Sent %d bytes\n", s);
 
     return s; 
 }
 
-void setIp(Communication *c,int id)
+void setStdIpAddrFormat(uint8_t id, uip_ipaddr_t* out)
 {
     /* Configure IP */
+    uip_ip6addr(out, 0xaaaa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, id);
+}
+
+void setIp(Communication *c, uint8_t id)
+{
+    /* Init uip ds6 */
+    uip_ds6_init();
+
+    /* Configure IP */
     uip_ipaddr_t ipaddr;
-    uip_ip6addr(&ipaddr, 0xaaaa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, id);
+    setStdIpAddrFormat(id, &ipaddr);
 
     /* Set IP */
+    LOG_INFO("Setting IP to "); LOG_INFO_6ADDR(&ipaddr); LOG_INFO_("\n");
     uip_ds6_addr_add(&ipaddr, 0, ADDR_MANUAL);
     LOG_INFO("IP: ");
     LOG_INFO_6ADDR(&ipaddr);
     LOG_INFO_("\n");  
-}
 
-uint16_t simpleCommunication_getPatienceInMs(struct Communication* c)
-{
-    /* Calculate Patience in ms */
-    uint16_t patience = (MAX_NODES - NETWORKING_ID) * 1000;
+    //uip_sethostaddr(&ipaddr);
 
-    LOG_INFO("Patience calculated to %d\n", (int)((float)patience/1000.0));
+    /* Log info my current ip addresses */
+    LOG_INFO("My addresses:\n");
+    int i;
+    for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+        if(uip_ds6_if.addr_list[i].isused) {
+            LOG_INFO("  ");
+            LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+            LOG_INFO_("\n");
+        }
+    }
 
-    return patience;
+    /* Log info my global IP */
+    LOG_INFO("My global IP: ");
+    LOG_INFO_6ADDR(&uip_ds6_get_global(ADDR_PREFERRED)->ipaddr);
 }
 
 byte* simpleCommunication_getBuffer(struct Communication* c)
 {
-    return c->buf;
+    return c->outgoing_buffer;
 }
 
 bool simpleCommunication_amIReachable(struct Communication* c)
 {
     bool r = false;
-    if (NETSTACK_ROUTING.node_is_reachable()) r = true;
+    uip_ipaddr_t root_ip;
+
+    /* Check if root ip address has been found */
+    if (NETSTACK_ROUTING.get_root_ipaddr(&root_ip)) r = true;
+    
+    /* Check if node is reachable */
+    else if (NETSTACK_ROUTING.node_is_reachable()) r = true;   
+
     return r; 
 }
+
 uint8_t bitCount(byte b)
 {
     uint8_t count = 0;

@@ -1,10 +1,21 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define DEBUG_LEVEL_RPL DEBUG_LEVEL_DBG
+/* Debugging */
+//#define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_DBG
+#define LOG_CONF_LEVEL_RPL                              LOG_LEVEL_ERR
+//#define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_DBG
+//#define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_DBG
+//#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_DBG
+//#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG
+
+/* RPL */
+#include "rpl-conf.h" //Default configurations
+
 
 /* Networking Defines */
-#define UDP_PORT 123
+#define UDP_SEND_PORT 5678
+#define UDP_RECV_PORT 8765
 #define RPL_ROOT_ID 1
 
 #ifndef NETWORKING_ID
@@ -21,5 +32,3 @@
 #define SEND_BUFFER_SIZE 16
 
 typedef uint16_t munit; //Measurement Unit
-
-#define CHECK_ALL_BITS_ARE_SAT_FROM_MASK(mask, value) ((mask & value) == mask)

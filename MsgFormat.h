@@ -6,6 +6,7 @@
 typedef unsigned char byte;
 
 #define BIT_SET(x,n) ((x) |= (1 << (n)))
+#define IS_BIT_SAT(x,n) ((x) & (1 << (n)))
 
 typedef struct MsgFormat {
     void (*init)(struct MsgFormat*, uint16_t bufsize);

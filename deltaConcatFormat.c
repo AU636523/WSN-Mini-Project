@@ -22,7 +22,7 @@ uint16_t deltaConcatFormat_do_agg(MsgFormat* m,uint8_t participantId, munit* d, 
     if (msgLength > m->bufsize) { LOG_INFO("UIP Buffer not large enough!"); return 0; }
 
     /* Check if participant is already in buffer */
-    if (BIT_SET(buf[DELTACONCATFORMAT_PARTICIPANT_MASK_LOC], participantId)) { LOG_INFO("Already in buffer, dropping message\n"); return 0; }
+    if (IS_BIT_SAT(buf[DELTACONCATFORMAT_PARTICIPANT_MASK_LOC], participantId)) { LOG_INFO("Already in buffer, dropping message\n"); return 0; }
 
     //Set participantID in mask
     buf[msgEnd + DELTACONCATFORMAT_PARTICIPANT_MASK_LOC] |= (1 << participantId);

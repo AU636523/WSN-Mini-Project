@@ -46,6 +46,19 @@
 			]
 		},
 		{
+			"label": "SKY Rebuild",
+			"command": "make",
+			"args": [
+				"TARGET=sky",
+				"clean",
+				"WSN.sky"
+			],
+			"isBuildCommand": true,
+			"problemMatcher": [
+				"$armcc5"
+			]
+		},
+		{
 			"label": "SKY Build and Upload",
 			"command": "make",
 			"args": [

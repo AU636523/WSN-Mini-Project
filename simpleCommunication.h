@@ -4,6 +4,8 @@
 #include "Communication.h"
 #include "net/ipv6/simple-udp.h"
 
+#include "net/ipv6/uip-ds6-nbr.h"
+
 /* Message format: 
  * 1 byte header (One Hot Encoded: NetworkID has added measurement)
  * 2 byte total length
@@ -17,9 +19,11 @@ int simpleCommunication_send(struct Communication *c, uip_ipaddr_t* ip, byte* ms
 byte* simpleCommunication_getBuffer(struct Communication* c);
 uint16_t simpleCommunication_getPatienceInMs(struct Communication* c);
 bool simpleCommunication_amIReachable(struct Communication* c);
+bool simpleCommunication_getNextRouteParticipant(struct Communication*, byte currentParticipantMask, uip_ipaddr_t* out);
 
 //Private functions
-void setIp(Communication *c,int id);
+void setIp(Communication *c, uint8_t id);
 uint8_t bitCount(byte b);
+void setStdIpAddrFormat(uint8_t id, uip_ipaddr_t* out);
 
 #endif

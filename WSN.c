@@ -59,22 +59,12 @@ PROCESS_THREAD(main_process, ev, data)
   /*** Main Loop ***/
   while(1) {    
     /* Nothing to do in the main loop for now */
-    while(0);
+    while(0);  
+    PROCESS_YIELD();
 
-    /* Debug: Print IP associated with all my interfaces */
-    uip_ds6_addr_t *lladdr;
-    int i = 0;
-    LOG_INFO("My addresses: ");
-    for(lladdr = uip_ds6_get_link_local(-1); lladdr != NULL; lladdr = uip_ds6_get_link_local(i)) {
-      LOG_INFO_6ADDR(&lladdr->ipaddr);
-      LOG_INFO_("\n");
-      i++;
-    }
-
-
-    /* Wait */
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&main_loop_timer));
-    etimer_reset(&main_loop_timer);
+    /* Process over */
+    //PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&main_loop_timer));
+    //etimer_reset(&main_loop_timer);
   }
 
   PROCESS_END();
@@ -87,7 +77,7 @@ PROCESS_THREAD(measurement_process, ev, data)
   LOG_INFO("Measurement Process Started\n");
 
   /* Init periodic timer */
-  etimer_set(&measurement_timer, CLOCK_SECOND * 1);
+  etimer_set(&measurement_timer, CLOCK_SECOND * node_id);
 
   /*** Main Loop ***/
   while(1) 
@@ -98,9 +88,9 @@ PROCESS_THREAD(measurement_process, ev, data)
     /* Save Measurement to container */
     mcontainer.put(&mcontainer, u);
 
-    //LOG_INFO("Alright, I got a measurement: %d\n", u);
-
-    if(mcontainer._inIdx >= SEND_BUFFER_SIZE) {process_poll(&communication_process); LOG_INFO("Got %d measurements - Polling Communication Process\n", mcontainer._inIdx); }
+    if(node_id != RPL_ROOT_ID)
+      if(mcontainer._inIdx >= SEND_BUFFER_SIZE) 
+        {process_poll(&communication_process); LOG_INFO("Got %d measurements - Polling Communication Process\n", mcontainer._inIdx); }
 
     /* Wait till timer expired */
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&measurement_timer));
@@ -117,12 +107,14 @@ PROCESS_THREAD(communication_process, ev, data)
   LOG_INFO("Communication Process Started\n");
 
   while(1) {
-
+    
     /* Wait till we have data to send and are polled by other measurement process */
-    PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_POLL);
+    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
 
     /* If root, don't send anything */
-    if(node_id == RPL_ROOT_ID) { LOG_INFO("I am root, so I don't send anything\n"); PROCESS_PAUSE(); continue; }
+    if(node_id == RPL_ROOT_ID) { PROCESS_YIELD(); continue; }
+
+    /*  */
 
     /* Add own data to message */
     LOG_INFO("Adding own data to message\n");
@@ -130,17 +122,17 @@ PROCESS_THREAD(communication_process, ev, data)
 
     /* Get the ip address of parent node in RPL DAG */
     uip_ipaddr_t parent_ip;
-    communication.getNextRouteParticipant(&communication, communication._buffer[DELTACONCATFORMAT_PARTICIPANT_MASK_LOC], &parent_ip);
+    bool nextParticipantFound = communication.getNextRouteParticipant(&communication, communication._buffer[DELTACONCATFORMAT_PARTICIPANT_MASK_LOC], &parent_ip);
     
     /* Send message to parent */
-    communication.send(&communication, &parent_ip, communication._buffer, newMsgLength);
+    if (newMsgLength > 0)
+    {
+      if(nextParticipantFound) communication.send(&communication, &parent_ip, communication._buffer, newMsgLength);
+        else {continue;}
+    }
 
-    /* Log info */
-    LOG_INFO("Send message with participant id %d to ", communication._buffer[DELTACONCATFORMAT_PARTICIPANT_MASK_LOC]); LOG_INFO_6ADDR(&parent_ip); LOG_INFO_(" with %d bytes\n", newMsgLength);
-    
     /* Wait */
-    PROCESS_PAUSE();
-
+    
     /* Clean buffer */
     communication._buffer[0] = 0x00;
     LOG_INFO("Cleaned buffer\n");

@@ -17,7 +17,7 @@ int circularContainer_put(measurementContainer* c, munit in)
     c->container[c->_inIdx % SEND_BUFFER_SIZE] = in;
     //LOG_INFO("Put: %d\n", c->container[c->_inIdx % SEND_BUFFER_SIZE]);
     c->_inIdx++;
-    LOG_INFO("Idx: %d\n", c->_inIdx);
+    //LOG_INFO("Idx: %d\n", c->_inIdx);
     
     return 1;
 }

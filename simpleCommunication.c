@@ -5,10 +5,21 @@
 #define LOG_MODULE "simpleCommunication"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
-static struct simple_udp_connection udp;
+static struct simple_udp_connection udp_in, udp_out;
+
 static struct process* _comProcess;
 
 static struct Communication* _c; //Local reference to communication singleton struct
+
+static void
+udp_rx_callback_out(struct simple_udp_connection *c,
+         const uip_ipaddr_t *sender_addr,
+         uint16_t sender_port,
+         const uip_ipaddr_t *receiver_addr,
+         uint16_t receiver_port,
+         const uint8_t *data,
+         uint16_t datalen)
+{LOG_INFO("Callback should not be called on udp out\n");}
 
 static void
 udp_rx_callback(struct simple_udp_connection *c,
@@ -60,30 +71,55 @@ void simpleCommunication_init(Communication *c, struct process* comProcess)
     c->getNextRouteParticipant = simpleCommunication_getNextRouteParticipant;
     _c = c;
 
+    uint8_t rs_in, rs_out;
+
+    rs_in = simple_udp_register(&udp_in, UDP_RECV_PORT, NULL, UDP_SEND_PORT, udp_rx_callback);
+    LOG_INFO("Registered UDP in Connection with status %d\n", rs_in);
+    LOG_INFO("Listening (in) to port %d\n", udp_in.local_port);    
+
     /* Register UDP Connection */
-    LOG_INFO("Registering UDP Connection\n");
-    simple_udp_register(&udp, UDP_SEND_PORT, NULL, UDP_RECV_PORT, udp_rx_callback);
-
-    /* Set IP according to node id */
-    setIp(c,node_id);
-
+    if(node_id != RPL_ROOT_ID)
+    {
+        rs_out = simple_udp_register(&udp_out, UDP_SEND_PORT, NULL, UDP_RECV_PORT, udp_rx_callback_out);
+        LOG_INFO("Registered UDP out Connection with status %d\n", rs_out);
+        LOG_INFO("Listening (not actually) (out) to port %d\n", udp_out.local_port);
+    }
+    
     /* Start DAG if I am root */
     if (node_id == RPL_ROOT_ID) { LOG_INFO("Starting DAG\n"); NETSTACK_ROUTING.root_start(); }
 
     /* Init RPL Neigbor Module for route and neighbor manipulation */
+    LOG_INFO("Init RPL Neighbor Module\n");
     rpl_neighbor_init();
 }
 
 bool simpleCommunication_getNextRouteParticipant(struct Communication* c, byte currentParticipantMask, uip_ipaddr_t* out)
 {
-    /* With this simple mechanism, the nodes HAVE to be arranged in order */
-    uint8_t i = node_id - 1;
-    while(IS_BIT_SAT(currentParticipantMask, i)){ i--; }
+    /* Go through participants in DAG */
+    rpl_nbr_t *nbr;
+    for(nbr = nbr_table_head(rpl_neighbors); nbr != NULL; nbr = nbr_table_next(rpl_neighbors, nbr)) {
+        /* Get ip address */
+        uip_ipaddr_t *ipaddr = rpl_neighbor_get_ipaddr(nbr);
+        /* Get node id from IP */
+        uint8_t nbrNodeId = ipaddr->u8[15];
 
-    LOG_INFO("Next route participant is %d\n", i);
+        /* Log info who I found */
+        LOG_INFO("Found neighbor: "); LOG_INFO_6ADDR(ipaddr); LOG_INFO_(" with node id %d\n", nbrNodeId);
 
-    setStdIpAddrFormat(i, out);
-    return true;
+        /* Check if node is in participant mask */
+        if (!IS_BIT_SAT(currentParticipantMask, nbrNodeId))
+        {
+            if(nbrNodeId < node_id)
+                {
+                    LOG_INFO("Found next route participant: %d\n", nbrNodeId);
+                    /* Set ip address */
+                    uip_ipaddr_copy(out, ipaddr);
+                    return true;
+                }
+        }
+    }
+    LOG_INFO("No next route participant found\n");
+    return false;
 }
 
 int simpleCommunication_send(struct Communication *c, uip_ipaddr_t* ip, byte* msg, int len)
@@ -92,50 +128,10 @@ int simpleCommunication_send(struct Communication *c, uip_ipaddr_t* ip, byte* ms
     LOG_INFO("Sending to "); LOG_INFO_6ADDR(ip); LOG_INFO_(" %d bytes\n", len);
 
     /* Send message */
-    uint16_t s = simple_udp_sendto(&udp, msg, len, ip);
-    LOG_INFO("Sent %d bytes\n", s);
+    simple_udp_sendto(&udp_out, msg,len,ip);
+    LOG_INFO("Sent %d bytes to ", len); LOG_INFO_6ADDR(ip); LOG_INFO_(" port %d\n", udp_out.remote_port);
 
-    return s; 
-}
-
-void setStdIpAddrFormat(uint8_t id, uip_ipaddr_t* out)
-{
-    /* Configure IP */
-    uip_ip6addr(out, 0xaaaa, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, id);
-}
-
-void setIp(Communication *c, uint8_t id)
-{
-    /* Init uip ds6 */
-    uip_ds6_init();
-
-    /* Configure IP */
-    uip_ipaddr_t ipaddr;
-    setStdIpAddrFormat(id, &ipaddr);
-
-    /* Set IP */
-    LOG_INFO("Setting IP to "); LOG_INFO_6ADDR(&ipaddr); LOG_INFO_("\n");
-    uip_ds6_addr_add(&ipaddr, 0, ADDR_MANUAL);
-    LOG_INFO("IP: ");
-    LOG_INFO_6ADDR(&ipaddr);
-    LOG_INFO_("\n");  
-
-    //uip_sethostaddr(&ipaddr);
-
-    /* Log info my current ip addresses */
-    LOG_INFO("My addresses:\n");
-    int i;
-    for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-        if(uip_ds6_if.addr_list[i].isused) {
-            LOG_INFO("  ");
-            LOG_INFO_6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-            LOG_INFO_("\n");
-        }
-    }
-
-    /* Log info my global IP */
-    LOG_INFO("My global IP: ");
-    LOG_INFO_6ADDR(&uip_ds6_get_global(ADDR_PREFERRED)->ipaddr);
+    return 0; 
 }
 
 byte* simpleCommunication_getBuffer(struct Communication* c)

@@ -3,8 +3,9 @@
 
 #include "Communication.h"
 #include "net/ipv6/simple-udp.h"
-
 #include "net/ipv6/uip-ds6-nbr.h"
+
+#define SIMPLECOMMUNICATION_RECV_PORT(id) (3000 + id)
 
 /* Message format: 
  * 1 byte header (One Hot Encoded: NetworkID has added measurement)
@@ -24,6 +25,5 @@ bool simpleCommunication_getNextRouteParticipant(struct Communication*, byte cur
 //Private functions
 void setIp(Communication *c, uint8_t id);
 uint8_t bitCount(byte b);
-void setStdIpAddrFormat(uint8_t id, uip_ipaddr_t* out);
 
 #endif

@@ -8,4 +8,9 @@ typedef struct Sensor {
     struct measurementContainer *_c;
 } Sensor;
 
+void randSensor_init(Sensor *s);
+munit randSensor_getMeasurement(struct Sensor *s);
+
+
+
 #endif

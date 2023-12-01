@@ -1,0 +1,6 @@
+TIMEOUT(60000);
+
+while (true) {
+  log.log(time + ":" + id + ":" + msg + "\n");
+  YIELD();
+}

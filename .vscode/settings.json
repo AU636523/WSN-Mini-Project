@@ -47,7 +47,9 @@
         "variant": "c",
         "deltaconcatformat.h": "c",
         "msgformat.h": "c",
-        "uip-nd6.h": "c"
+        "uip-nd6.h": "c",
+        "uip-icmp6.h": "c",
+        "math.h": "c"
     },
     "cmake.configureOnOpen": true
     

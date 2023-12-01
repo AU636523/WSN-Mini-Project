@@ -14,6 +14,5 @@ void randSensor_init(struct Sensor *s) {
 
 munit randSensor_getMeasurement(struct Sensor *s) {
     int random = random_rand();
-    //LOG_INFO("Random sensor measurement: %d\n", random);
     return (munit)random;
 }

@@ -3,10 +3,10 @@
 
 #include "project-conf.h"
 
-#include "circularContainer.h"
 #include "randSensor.h"
-#include "nullMeasurer.h"
 #include "simpleCommunication.h"
+#include "circularContainer.h"
+#include "PooledAgg.h"
 
 #include "sys/log.h"
 #define LOG_MODULE "WSN"
@@ -22,9 +22,10 @@ AUTOSTART_PROCESSES(&main_process, &measurement_process, &communication_process)
 /* Global Components */
 struct Sensor sensor;
 struct measurementContainer mcontainer;
-struct EnergyMeasurer energyMeasurer;
 struct Communication communication;
 struct MsgFormat msgformat;
+
+//uint8_t sampleTime;
 
 /* Timers */
 static struct etimer main_loop_timer, measurement_timer;
@@ -33,25 +34,26 @@ static struct etimer main_loop_timer, measurement_timer;
 PROCESS_THREAD(main_process, ev, data)
 {
   PROCESS_BEGIN();
+  //sampleTime = 128; //Equals 1 second
 
   /*** Set node ID ***/
   //node_id = NETWORKING_ID;          //Comment for Cooja, uncomment for real deployment
-      
+
   /*** Init Components ***/
-  randSensor_init(&sensor);
-  nullMeasurer_init(&energyMeasurer);
-  simpleCommunication_init(&communication, &communication_process);
-  deltaConcatFormat_init(&msgformat, UIP_CONF_BUFFER_SIZE);
-  circularContainer_init(&mcontainer);
+  randSensor_init(&sensor); //Random Sensor
+  pooledAgg_init(&msgformat); //Pooled Aggregator
+  simpleCommunication_init(&communication, &communication_process, &msgformat); //Simple UDP Communication
+  circularContainer_init(&mcontainer); //Circular Container
 
   /*** Init Periodic Timer ***/
-  etimer_set(&main_loop_timer, CLOCK_SECOND * 3);
+  etimer_set(&main_loop_timer, CLOCK_SECOND * 30);
 
   /*** Wait for DAG ***/
   while(!communication.amIReachable(&communication)) {
     /* Process wait till in DAG */
-    LOG_INFO("Waiting for routing\n");
+    //LOG_INFO("Waiting for routing\n");
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&main_loop_timer));
+
     /* Wait and try again */
     etimer_reset(&main_loop_timer);
   } LOG_INFO("Found DAG\n");
@@ -60,11 +62,14 @@ PROCESS_THREAD(main_process, ev, data)
   while(1) {    
     /* Nothing to do in the main loop for now */
     while(0);  
-    PROCESS_YIELD();
+    PROCESS_PAUSE();
+    //sampleTime -= 1;
+    //LOG_INFO("Sample time: %d (128=1sec)\n", sampleTime); 
 
-    /* Process over */
-    //PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&main_loop_timer));
-    //etimer_reset(&main_loop_timer);
+    //if (sampleTime == 1) while(1){LOG_INFO("DONE\n"); PROCESS_PAUSE();}
+
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&main_loop_timer));
+    etimer_reset(&main_loop_timer);
   }
 
   PROCESS_END();
@@ -74,10 +79,10 @@ PROCESS_THREAD(main_process, ev, data)
 PROCESS_THREAD(measurement_process, ev, data)
 {
   PROCESS_BEGIN();
-  LOG_INFO("Measurement Process Started\n");
+  //LOG_INFO("Measurement Process Started\n");
 
   /* Init periodic timer */
-  etimer_set(&measurement_timer, CLOCK_SECOND * node_id);
+  etimer_set(&measurement_timer, CLOCK_SECOND * MEASUREMENT_PERIOD);
 
   /*** Main Loop ***/
   while(1) 
@@ -88,11 +93,11 @@ PROCESS_THREAD(measurement_process, ev, data)
     /* Save Measurement to container */
     mcontainer.put(&mcontainer, u);
 
-    if(node_id != RPL_ROOT_ID)
-      if(mcontainer._inIdx >= SEND_BUFFER_SIZE) 
-        {process_poll(&communication_process); LOG_INFO("Got %d measurements - Polling Communication Process\n", mcontainer._inIdx); }
+    /* If not node, poll communication process to send if ring buffer filled up */
+    if(mcontainer._inIdx >= MESSAGE_MEASUREMENT_COUNT) 
+      { process_post(&communication_process,PROCESS_EVENT_MAX,(void*)NULL); }
 
-    /* Wait till timer expired */
+    /* Ready to do new measurement */
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&measurement_timer));
     etimer_reset(&measurement_timer);
   }
@@ -104,37 +109,33 @@ PROCESS_THREAD(measurement_process, ev, data)
 PROCESS_THREAD(communication_process, ev, data)
 {
   PROCESS_BEGIN();
-  LOG_INFO("Communication Process Started\n");
+  //LOG_INFO("Communication Process Started\n");
 
   while(1) {
     
     /* Wait till we have data to send and are polled by other measurement process */
-    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_POLL);
+    PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_MAX || ev == PROCESS_EVENT_MSG);
 
     /* If root, don't send anything */
     if(node_id == RPL_ROOT_ID) { PROCESS_YIELD(); continue; }
 
-    /*  */
-
-    /* Add own data to message */
-    LOG_INFO("Adding own data to message\n");
-    uint16_t newMsgLength = msgformat.do_agg(&msgformat,node_id,mcontainer.getBatch(&mcontainer), communication._buffer);
-
-    /* Get the ip address of parent node in RPL DAG */
+    /* Get next route */
     uip_ipaddr_t parent_ip;
-    bool nextParticipantFound = communication.getNextRouteParticipant(&communication, communication._buffer[DELTACONCATFORMAT_PARTICIPANT_MASK_LOC], &parent_ip);
+    #ifdef AGGREGATION
+      bool nextParticipantFound = communication.getNextRouteParticipant(&communication, communication._outBuffer[0], &parent_ip);
+      if(!nextParticipantFound) { LOG_INFO("No next participant found\n"); continue; }
+    #else
+      NETSTACK_ROUTING.get_root_ipaddr(&parent_ip);
+    #endif // !AGGREGATION
     
-    /* Send message to parent */
-    if (newMsgLength > 0)
-    {
-      if(nextParticipantFound) communication.send(&communication, &parent_ip, communication._buffer, newMsgLength);
-        else {continue;}
-    }
-
-    /* Wait */
+    /* Add our own measurements */
+    uint16_t len = communication._msgformat->aggOwn(communication._msgformat, mcontainer.getBatch(&mcontainer),communication._outBuffer);
     
-    /* Clean buffer */
-    communication._buffer[0] = 0x00;
+    /* Send */
+    communication.send(&communication, &parent_ip, communication._outBuffer, len);    
+    
+    /* Clean buffer by setting participation mask to zero */
+    communication._outBuffer[0] = 0x00;
     LOG_INFO("Cleaned buffer\n");
   }
 

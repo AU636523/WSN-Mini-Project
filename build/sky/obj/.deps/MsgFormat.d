@@ -1,6 +1,5 @@
-build/sky/obj/deltaConcatFormat.o: deltaConcatFormat.c \
- deltaConcatFormat.h MsgFormat.h MeasurementContainer.h project-conf.h \
- ../../os/net/routing/rpl-lite/rpl-conf.h ../../os/contiki.h \
+build/sky/obj/MsgFormat.o: MsgFormat.c MsgFormat.h MeasurementContainer.h \
+ project-conf.h ../../os/sys/node-id.h ../../os/contiki.h \
  ../../arch/platform/sky/./contiki-conf.h project-conf.h \
  ../../arch/platform/sky/./sky-def.h ../../arch/cpu/msp430/./msp430-def.h \
  ../../arch/cpu/msp430/./msp430-conf.h ../../os/contiki-default-conf.h \
@@ -10,12 +9,7 @@ build/sky/obj/deltaConcatFormat.o: deltaConcatFormat.c \
  ../../os/sys/ctimer.h ../../os/sys/etimer.h ../../os/sys/etimer.h \
  ../../os/sys/rtimer.h ../../os/dev/watchdog.h \
  ../../arch/cpu/msp430/./rtimer-arch.h ../../os/sys/rtimer.h \
- ../../os/sys/pt.h ../../os/sys/clock.h ../../os/sys/log.h \
- ../../os/net/linkaddr.h ../../os/sys/log-conf.h ../../os/net/ipv6/uip.h \
- ../../os/net/ipv6/uipopt.h ../../os/net/ipv6/uipbuf.h \
- ../../os/net/ipv6/tcpip.h
-
-deltaConcatFormat.h:
+ ../../os/sys/pt.h ../../os/sys/clock.h ../../os/net/linkaddr.h
 
 MsgFormat.h:
 
@@ -23,7 +17,7 @@ MeasurementContainer.h:
 
 project-conf.h:
 
-../../os/net/routing/rpl-lite/rpl-conf.h:
+../../os/sys/node-id.h:
 
 ../../os/contiki.h:
 
@@ -75,16 +69,4 @@ project-conf.h:
 
 ../../os/sys/clock.h:
 
-../../os/sys/log.h:
-
 ../../os/net/linkaddr.h:
-
-../../os/sys/log-conf.h:
-
-../../os/net/ipv6/uip.h:
-
-../../os/net/ipv6/uipopt.h:
-
-../../os/net/ipv6/uipbuf.h:
-
-../../os/net/ipv6/tcpip.h:

@@ -13,11 +13,8 @@ void circularContainer_init(measurementContainer* c)
 }
 int circularContainer_put(measurementContainer* c, munit in)
 {
-    //LOG_INFO("Put: %d\n", in);
-    c->container[c->_inIdx % SEND_BUFFER_SIZE] = in;
-    //LOG_INFO("Put: %d\n", c->container[c->_inIdx % SEND_BUFFER_SIZE]);
+    c->container[c->_inIdx % MESSAGE_MEASUREMENT_COUNT] = in;
     c->_inIdx++;
-    //LOG_INFO("Idx: %d\n", c->_inIdx);
     
     return 1;
 }
